@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-VERIFY_TOKEN = os.getenv("VERIFY_TOKEN", "meu_token_de_verificacao")
+VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
 WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
 PHONE_ID = os.getenv("PHONE_ID")
 
@@ -51,4 +51,5 @@ def send_whatsapp_message(to, text):
     print("Envio status:", resp.status_code, resp.text)
 
 if __name__ == "__main__":
+
     app.run(host="0.0.0.0", port=8000)
