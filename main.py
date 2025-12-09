@@ -1,13 +1,15 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import requests
 import os
 
 app = Flask(__name__)
 
+# Pegando os tokens e IDs do ambiente (Render)
 VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
 WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
 PHONE_ID = os.getenv("PHONE_ID")
 
+# Rota GET para validação do webhook
 @app.route("/webhook", methods=["GET"])
 def verify_webhook():
     mode = request.args.get("hub.mode")
@@ -15,9 +17,11 @@ def verify_webhook():
     challenge = request.args.get("hub.challenge")
 
     if mode == "subscribe" and token == VERIFY_TOKEN:
-        return challenge, 200
+        # Retorna o challenge como text/plain, como o Meta exige
+        return Response(challenge, status=200, mimetype="text/plain")
     return "Erro de verificação", 403
 
+# Rota POST para receber mensagens do WhatsApp
 @app.route("/webhook", methods=["POST"])
 def receive_message():
     data = request.get_json()
@@ -35,6 +39,7 @@ def receive_message():
 
     return jsonify({"status": "ok"}), 200
 
+# Função para enviar mensagens via WhatsApp API
 def send_whatsapp_message(to, text):
     url = f"https://graph.facebook.com/v17.0/{PHONE_ID}/messages"
     headers = {
@@ -50,9 +55,11 @@ def send_whatsapp_message(to, text):
     resp = requests.post(url, headers=headers, json=payload)
     print("Envio status:", resp.status_code, resp.text)
 
+# Inicialização do Flask usando a porta do Render
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
