@@ -9,6 +9,9 @@ VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
 WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
 PHONE_ID = os.getenv("PHONE_ID")
 
+# DEBUG: imprime no log para garantir que o token está sendo carregado
+print("VERIFY_TOKEN carregado:", VERIFY_TOKEN)
+
 # Rota GET para validação do webhook
 @app.route("/webhook", methods=["GET"])
 def verify_webhook():
