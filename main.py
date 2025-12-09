@@ -24,7 +24,6 @@ def verify_webhook():
     print("VERIFY_TOKEN atual:", VERIFY_TOKEN)
 
     if mode == "subscribe" and token == VERIFY_TOKEN:
-        # Retorna o challenge como text/plain, como o Meta exige
         return Response(challenge, status=200, mimetype="text/plain")
     return "Erro de verificação", 403
 
@@ -32,17 +31,25 @@ def verify_webhook():
 @app.route("/webhook", methods=["POST"])
 def receive_message():
     data = request.get_json()
+    
+    # LOG completo do JSON recebido
+    print("JSON recebido do WhatsApp:", data)
 
     try:
-        message = data["entry"][0]["changes"][0]["value"]["messages"][0]
-        number = message["from"]
-        text = message.get("text", {}).get("body", "")
-        print(f"Mensagem recebida de {number}: {text}")
+        # Se houver mensagens, processa normalmente
+        messages = data.get("entry", [])[0].get("changes", [])[0].get("value", {}).get("messages", [])
+        if messages:
+            message = messages[0]
+            number = message.get("from")
+            text = message.get("text", {}).get("body", "")
+            print(f"Mensagem recebida de {number}: {text}")
 
-        if text and text.lower().strip() == "oi":
-            send_whatsapp_message(number, "Olá! Tudo bem? 😊")
+            if text and text.lower().strip() == "oi":
+                send_whatsapp_message(number, "Olá! Tudo bem? 😊")
+        else:
+            print("Nenhuma mensagem encontrada no JSON")
     except Exception as e:
-        print("Sem mensagem válida ou erro:", e)
+        print("Erro ao processar mensagem:", e)
 
     return jsonify({"status": "ok"}), 200
 
