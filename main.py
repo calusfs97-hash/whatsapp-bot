@@ -16,6 +16,10 @@ def verify_webhook():
     token = request.args.get("hub.verify_token")
     challenge = request.args.get("hub.challenge")
 
+    # LOG de depuração para checar o token
+    print("META GET:", mode, token, challenge)
+    print("VERIFY_TOKEN atual:", VERIFY_TOKEN)
+
     if mode == "subscribe" and token == VERIFY_TOKEN:
         # Retorna o challenge como text/plain, como o Meta exige
         return Response(challenge, status=200, mimetype="text/plain")
@@ -59,7 +63,3 @@ def send_whatsapp_message(to, text):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port)
-
-
-
-
