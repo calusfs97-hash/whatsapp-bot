@@ -32,49 +32,28 @@ def verify_webhook():
 
 
 # ---------------------------
-# ROTA POST: RECEBER MENSAGENS
+# ROTA POST: RECEBER MENSAGENS  **(SUBSTITUÍDA)**
 # ---------------------------
 @app.route("/webhook", methods=["POST"])
 def receive_message():
 
-    # Tenta pegar JSON; se vier vazio, tenta pegar texto cru
-    data = request.get_json(silent=True)
+    print("\n===== NOVA REQUISIÇÃO DO META =====")
 
-    if data is None:
-        raw_body = request.data.decode("utf-8")
-        print("\n=== RECEBIDO DO META (RAW BODY) ===")
-        print(raw_body)
-        print("==================================\n")
-        return jsonify({"status": "ok"}), 200
+    # Sempre imprime o body bruto
+    raw = request.data.decode("utf-8")
+    print("RAW BODY:", raw)
 
-    print("\n=== RECEBIDO DO META (JSON) ===")
-    print(data)
-    print("===============================\n")
-
+    # Tenta converter para JSON
     try:
-        messages = (
-            data.get("entry", [])[0]
-                .get("changes", [])[0]
-                .get("value", {})
-                .get("messages", [])
-        )
-
-        if messages:
-            message = messages[0]
-            number = message.get("from")
-            text = message.get("text", {}).get("body", "")
-            print(f"Mensagem recebida de {number}: {text}")
-
-            if text and text.lower().strip() == "oi":
-                send_whatsapp_message(number, "Olá! Tudo bem? 😊")
-
-        else:
-            print("Nenhuma mensagem encontrada no JSON")
-
+        data = request.get_json()
+        print("JSON PARSEADO:", data)
     except Exception as e:
-        print("Erro ao processar mensagem:", e)
+        print("ERRO AO PARSEAR JSON:", e)
+
+    print("====================================\n")
 
     return jsonify({"status": "ok"}), 200
+
 
 
 # ---------------------------
@@ -105,4 +84,3 @@ if __name__ == "__main__":
     port = int(os.environ["PORT"])
     print("Rodando na porta:", port)
     app.run(host="0.0.0.0", port=port)
-
