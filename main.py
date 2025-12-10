@@ -32,7 +32,7 @@ def verify_webhook():
 
 
 # ---------------------------
-# ROTA POST: RECEBER MENSAGENS  **(SUBSTITUÍDA)**
+# ROTA POST: RECEBER MENSAGENS  **(ALTERADA)**
 # ---------------------------
 @app.route("/webhook", methods=["POST"])
 def receive_message():
@@ -53,7 +53,6 @@ def receive_message():
     print("====================================\n")
 
     return jsonify({"status": "ok"}), 200
-
 
 
 # ---------------------------
