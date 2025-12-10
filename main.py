@@ -101,5 +101,8 @@ def send_whatsapp_message(to, text):
 # INICIALIZAÇÃO FLASK (RENDER)
 # ---------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
+    # Agora garantido que usa exatamente a porta definida pelo Render
+    port = int(os.environ["PORT"])
+    print("Rodando na porta:", port)
     app.run(host="0.0.0.0", port=port)
+
