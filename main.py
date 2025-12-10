@@ -12,32 +12,53 @@ PHONE_ID = os.getenv("PHONE_ID")
 # DEBUG: imprime no log para garantir que o token está sendo carregado
 print("VERIFY_TOKEN carregado:", VERIFY_TOKEN)
 
-# Rota GET para validação do webhook
+
+# ---------------------------
+# ROTA GET: VALIDAÇÃO WEBHOOK
+# ---------------------------
 @app.route("/webhook", methods=["GET"])
 def verify_webhook():
     mode = request.args.get("hub.mode")
     token = request.args.get("hub.verify_token")
     challenge = request.args.get("hub.challenge")
 
-    # LOG de depuração para checar o token
     print("META GET:", mode, token, challenge)
     print("VERIFY_TOKEN atual:", VERIFY_TOKEN)
 
     if mode == "subscribe" and token == VERIFY_TOKEN:
         return Response(challenge, status=200, mimetype="text/plain")
+    
     return "Erro de verificação", 403
 
-# Rota POST para receber mensagens do WhatsApp
+
+# ---------------------------
+# ROTA POST: RECEBER MENSAGENS
+# ---------------------------
 @app.route("/webhook", methods=["POST"])
 def receive_message():
-    data = request.get_json()
-    
-    # LOG completo do JSON recebido
-    print("JSON recebido do WhatsApp:", data)
+
+    # Tenta pegar JSON; se vier vazio, tenta pegar texto cru
+    data = request.get_json(silent=True)
+
+    if data is None:
+        raw_body = request.data.decode("utf-8")
+        print("\n=== RECEBIDO DO META (RAW BODY) ===")
+        print(raw_body)
+        print("==================================\n")
+        return jsonify({"status": "ok"}), 200
+
+    print("\n=== RECEBIDO DO META (JSON) ===")
+    print(data)
+    print("===============================\n")
 
     try:
-        # Se houver mensagens, processa normalmente
-        messages = data.get("entry", [])[0].get("changes", [])[0].get("value", {}).get("messages", [])
+        messages = (
+            data.get("entry", [])[0]
+                .get("changes", [])[0]
+                .get("value", {})
+                .get("messages", [])
+        )
+
         if messages:
             message = messages[0]
             number = message.get("from")
@@ -46,14 +67,19 @@ def receive_message():
 
             if text and text.lower().strip() == "oi":
                 send_whatsapp_message(number, "Olá! Tudo bem? 😊")
+
         else:
             print("Nenhuma mensagem encontrada no JSON")
+
     except Exception as e:
         print("Erro ao processar mensagem:", e)
 
     return jsonify({"status": "ok"}), 200
 
-# Função para enviar mensagens via WhatsApp API
+
+# ---------------------------
+# FUNÇÃO PARA ENVIAR MENSAGEM
+# ---------------------------
 def send_whatsapp_message(to, text):
     url = f"https://graph.facebook.com/v17.0/{PHONE_ID}/messages"
     headers = {
@@ -66,10 +92,14 @@ def send_whatsapp_message(to, text):
         "type": "text",
         "text": {"body": text}
     }
+    
     resp = requests.post(url, headers=headers, json=payload)
     print("Envio status:", resp.status_code, resp.text)
 
-# Inicialização do Flask usando a porta do Render
+
+# ---------------------------
+# INICIALIZAÇÃO FLASK (RENDER)
+# ---------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port)
